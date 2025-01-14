@@ -1,8 +1,10 @@
+#include "config.h"
+
+#ifdef RUN_FULL
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO08x.h>
 #include <Adafruit_NeoPixel.h>
-
 
 // Select the desired sensor output
 #define REPORT_TYPE SH2_GAME_ROTATION_VECTOR
@@ -80,7 +82,7 @@ void calibrateGroundZero() {
 }
 
 
-void setup() {
+void fullSetup() {
  Serial.begin(115200);
  while (!Serial);
 
@@ -113,7 +115,7 @@ void setup() {
 }
 
 
-void loop() {
+void fullLoop() {
  if (!groundZeroSet) {
    Serial.println("Ground zero not set. Recalibrating...");
    calibrateGroundZero();
@@ -164,3 +166,4 @@ void loop() {
 
  delay(100);
 }
+#endif
