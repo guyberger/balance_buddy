@@ -1,14 +1,16 @@
 #include "config.h"
 
-#ifdef RUN_FULL
+#include "thingProperties.h"
+#include "bb_imu.h"
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO08x.h>
 #include <Adafruit_NeoPixel.h>
+#include <ArduinoIoTCloud.h>
+#include <Arduino_ConnectionHandler.h>
 
 // Select the desired sensor output
 #define REPORT_TYPE SH2_GAME_ROTATION_VECTOR
-
 
 // Pixels
 #define BUTTON_PIN 1
@@ -29,9 +31,6 @@
 
 #define NUMPIXELS 8
 
-
-float groundZeroX = 0.0, groundZeroY = 0.0, groundZeroZ = 0.0;
-bool groundZeroSet = false;
 int exerciseState = 0; // 0 = none; 1 = squat; 2 = row;
 
 const float greenThreshold = 0.05;
@@ -39,50 +38,15 @@ const float yellowThreshold = 0.1;
 const float redThreshold = 0.2;
 int lightMode = NO_LIGHT;
 
-
 Adafruit_NeoPixel pixels(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
-Adafruit_BNO08x bno = Adafruit_BNO08x();
-sh2_SensorValue_t sensorValue;
 
+void onRepsChange();
 
 void setColor(int red, int green, int blue) {
  for (int i = 0; i < NUMPIXELS; i++) {
    pixels.setPixelColor(i, pixels.Color(red, green, blue));
  }
  pixels.show();
-}
-
-
-void calibrateGroundZero() {
- Serial.println("Calibrating ground zero. Please keep the device stationary...");
- delay(3000); // Wait for 3 seconds
-
-
- groundZeroSet = false;
- int retries = 10;
- while (retries > 0 && !groundZeroSet) {
-   if (bno.getSensorEvent(&sensorValue)) {
-     groundZeroX = sensorValue.un.gameRotationVector.i;
-     groundZeroY = sensorValue.un.gameRotationVector.j;
-     groundZeroZ = sensorValue.un.gameRotationVector.k;
-     groundZeroSet = true;
-
-
-     Serial.println("Ground zero calibration complete!");
-     Serial.print("Ground Zero - X: "); Serial.print(groundZeroX, 6);
-     Serial.print(" Y: "); Serial.print(groundZeroY, 6);
-     Serial.print(" Z: "); Serial.println(groundZeroZ, 6);
-   } else {
-     retries--;
-     delay(100);
-   }
- }
-
-
- if (!groundZeroSet) {
-   Serial.println("Failed to set ground zero after multiple attempts.");
-   setColor(RED); // Signal error
- }
 }
 
 void updateExerciseState() {
@@ -106,37 +70,20 @@ void updateExerciseState() {
 
 
 void fullSetup() {
- Serial.begin(115200);
- while (!Serial);
+    imuSetup();
+  initProperties();
+  setDebugMessageLevel(2);
+  ArduinoCloud.printDebugInfo();
+
+  // Connect to Arduino IoT Cloud
+  ArduinoCloud.begin(ArduinoIoTPreferredConnection);
 
  pinMode(BUTTON_PIN, INPUT);
  pinMode(VM_PIN, OUTPUT);
  pinMode(RED_LED_PIN, OUTPUT);
  pinMode(BLUE_LED_PIN, OUTPUT);
-
- if (!bno.begin_I2C()) {
-   Serial.println("Failed to find BNO085 chip. Check wiring!");
-   setColor(RED); // Signal error
-   while (1); // Halt if BNO085 isn't found
- }
-
-
- Serial.println("BNO085 detected!");
-
-
- if (!bno.enableReport(REPORT_TYPE)) {
-   Serial.println("Failed to enable Game Rotation Vector report.");
-   setColor(RED); // Signal error
-   while (1); // Halt if report isn't enabled
- }
-
-
- Serial.println("Game Rotation Vector report enabled!");
  pixels.begin();
  setColor(NO_COLOR); // Turn off all LEDs initially
-
-
- calibrateGroundZero();
 }
 
 
@@ -146,6 +93,7 @@ void fullLoop() {
    calibrateGroundZero();
    return; // Retry calibration
  }
+ ArduinoCloud.update();
 
  int buttonState = digitalRead(BUTTON_PIN);
  if (buttonState == HIGH) {
@@ -193,7 +141,10 @@ void fullLoop() {
    Serial.println("Failed to retrieve sensor data.");
  }
 
-
+  reps += 1;
  delay(100);
 }
-#endif
+
+void onRepsChange()  {
+   Serial.println("rep count: "); Serial.print(reps, 2);
+}
