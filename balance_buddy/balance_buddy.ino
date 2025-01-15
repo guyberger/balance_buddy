@@ -12,12 +12,7 @@
 // Select the desired sensor output
 #define REPORT_TYPE SH2_GAME_ROTATION_VECTOR
 
-// Pixels
-#define BUTTON_PIN 1
-#define RED_LED_PIN 2
-#define BLUE_LED_PIN 3
-#define VM_PIN 4
-#define NEOPIXEL_PIN 7
+
 
 #define NO_LIGHT 0
 #define RED_MODE 1
@@ -70,13 +65,14 @@ void updateExerciseState() {
 
 
 void fullSetup() {
-    imuSetup();
+  imuSetup();
   initProperties();
   setDebugMessageLevel(2);
   ArduinoCloud.printDebugInfo();
 
   // Connect to Arduino IoT Cloud
   ArduinoCloud.begin(ArduinoIoTPreferredConnection);
+  connectToWifi();
 
  pinMode(BUTTON_PIN, INPUT);
  pinMode(VM_PIN, OUTPUT);
@@ -84,6 +80,16 @@ void fullSetup() {
  pinMode(BLUE_LED_PIN, OUTPUT);
  pixels.begin();
  setColor(NO_COLOR); // Turn off all LEDs initially
+}
+
+void connectToWifi() {
+  if (WiFi.begin(SSID, PASS) == WL_CONNECTED) {
+    Serial.println("Connected!");
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("Failed to connect to Wi-Fi.");
+  }
 }
 
 

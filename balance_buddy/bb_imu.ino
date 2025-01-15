@@ -11,7 +11,7 @@ bool groundZeroSet = false;
 // IMU setup function
 void imuSetup() {
   Serial.begin(115200);
-  while (!Serial);
+  // while (!Serial);
 
   if (!bno.begin_I2C()) {
     Serial.println("Failed to find BNO085 chip. Check wiring!");
