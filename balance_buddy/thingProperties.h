@@ -10,12 +10,9 @@ const char PASS[]     = SECRET_PASS;    // Network password (use for WPA, or use
 void onRepsChange();
 
 int reps;
+String state;
 
-void initProperties(){
+void initProperties();
 
-  ArduinoCloud.setThingId(THING_ID);
-  ArduinoCloud.addProperty(reps, READWRITE, ON_CHANGE, onRepsChange);
-
-}
 
 WiFiConnectionHandler ArduinoIoTPreferredConnection(SSID, PASS);
