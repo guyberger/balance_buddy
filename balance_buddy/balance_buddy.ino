@@ -11,8 +11,12 @@
 
 
 // Pixels
-#define PIN 7
-#define VM_PIN 2
+#define BUTTON_PIN 1
+#define RED_LED_PIN 2
+#define BLUE_LED_PIN 3
+#define VM_PIN 4
+#define NEOPIXEL_PIN 7
+
 #define NO_LIGHT 0
 #define RED_MODE 1
 #define YELLOW_MODE 2
@@ -28,7 +32,7 @@
 
 float groundZeroX = 0.0, groundZeroY = 0.0, groundZeroZ = 0.0;
 bool groundZeroSet = false;
-
+int exerciseState = 0; // 0 = none; 1 = squat; 2 = row;
 
 const float greenThreshold = 0.05;
 const float yellowThreshold = 0.1;
@@ -36,7 +40,7 @@ const float redThreshold = 0.2;
 int lightMode = NO_LIGHT;
 
 
-Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_BNO08x bno = Adafruit_BNO08x();
 sh2_SensorValue_t sensorValue;
 
@@ -81,13 +85,34 @@ void calibrateGroundZero() {
  }
 }
 
+void updateExerciseState() {
+  Serial.print("Current exerciseState is: ");
+  Serial.println(exerciseState);
+  exerciseState = (++exerciseState) % 3;
+  Serial.print("Updated exerciseState to: ");
+  Serial.println(exerciseState);
+
+  if (exerciseState == 1) {
+    digitalWrite(RED_LED_PIN, HIGH);
+    digitalWrite(BLUE_LED_PIN, LOW);
+  } else if (exerciseState == 2) {
+    digitalWrite(RED_LED_PIN, LOW);
+    digitalWrite(BLUE_LED_PIN, HIGH);
+  } else {
+    digitalWrite(RED_LED_PIN, LOW);
+    digitalWrite(BLUE_LED_PIN, LOW);
+  }
+}
+
 
 void fullSetup() {
  Serial.begin(115200);
  while (!Serial);
 
-  pinMode(VM_PIN, OUTPUT);
-
+ pinMode(BUTTON_PIN, INPUT);
+ pinMode(VM_PIN, OUTPUT);
+ pinMode(RED_LED_PIN, OUTPUT);
+ pinMode(BLUE_LED_PIN, OUTPUT);
 
  if (!bno.begin_I2C()) {
    Serial.println("Failed to find BNO085 chip. Check wiring!");
@@ -120,6 +145,11 @@ void fullLoop() {
    Serial.println("Ground zero not set. Recalibrating...");
    calibrateGroundZero();
    return; // Retry calibration
+ }
+
+ int buttonState = digitalRead(BUTTON_PIN);
+ if (buttonState == HIGH) {
+  updateExerciseState();
  }
 
 

@@ -1,8 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// #define RUN_FULL
-#define RUN_IMU
+#define RUN_FULL
+// #define RUN_IMU
 
 // Thresholds for posture validation
 #define GREEN_THRESHOLD 0.05
