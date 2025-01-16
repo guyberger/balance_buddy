@@ -1,4 +1,4 @@
-#include "squats.h"
+#include "curls.h"
 
 // IMU states
 const float greenThreshold = 0.05;
@@ -32,7 +32,7 @@ bool detectReps(float deltaY) {
     }
 
     // Check for downward motion (decreasing pitch)
-    if (goingUp && s < previousDeltaY - 0.01) { // Threshold for downward motion
+    if (goingUp && deltaY < previousDeltaY - 0.01) { // Threshold for downward motion
         goingDown = true;
         goingUp = false;  // Reset upward flag
         Serial.println("Detected downward motion. Rep completed!");

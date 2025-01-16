@@ -194,6 +194,7 @@ while (retries > 0 && !groundZeroSet) {
     Serial.print("Ground Zero - X: "); Serial.print(groundZeroX, 6);
     Serial.print(" Y: "); Serial.print(groundZeroY, 6);
     Serial.print(" Z: "); Serial.println(groundZeroZ, 6);
+    setColor(GREEN);
   } else {
     retries--;
     delay(100);
