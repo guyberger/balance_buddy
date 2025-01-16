@@ -13,6 +13,7 @@ int reps;
 int lightMode;
 float pctGreen;
 float armVertical;
+bool isGreen;
 
 void initProperties();
 

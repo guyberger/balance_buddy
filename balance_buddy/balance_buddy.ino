@@ -32,6 +32,9 @@ Adafruit_NeoPixel pixels(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_BNO08x bno = Adafruit_BNO08x();
 sh2_SensorValue_t sensorValue;
 
+/* WIFI */
+bool wifiConnected = false;
+
 // Ground zero variables
 float groundZeroX = 0.0, groundZeroY = 0.0, groundZeroZ = 0.0;
 bool groundZeroSet = false;
@@ -43,6 +46,7 @@ void initProperties () {
   ArduinoCloud.addProperty(lightMode, READWRITE, ON_CHANGE, initState);
   ArduinoCloud.addProperty(pctGreen, READWRITE, ON_CHANGE, initPct);
   ArduinoCloud.addProperty(armVertical, READWRITE, ON_CHANGE, initArm);
+  ArduinoCloud.addProperty(isGreen, READWRITE, ON_CHANGE, initGreen);
 }
 
 // IMU setup function
@@ -85,6 +89,11 @@ void setup() {
 }
 
 void loop() {
+    if (!wifiConnected) {
+        Serial.println("Waiting for Wi-Fi...");
+        delay(500); // Avoid busy looping
+        return;
+    }
     ArduinoCloud.update();
 
     if (bno.getSensorEvent(&sensorValue)) {
@@ -154,6 +163,7 @@ void SetMode(int mode) {
       break;
     }
     lightMode = mode;
+    isGreen = lightMode == GREEN_MODE;
     ArduinoCloud.update();
   }
 }
@@ -166,13 +176,14 @@ void setColor(int red, int green, int blue) {
 }
 
 void connectToWifi() {
-  if (WiFi.begin(SSID, PASS) == WL_CONNECTED) {
-    Serial.println("Connected!");
-    Serial.print("IP Address: ");
-    Serial.println(WiFi.localIP());
-  } else {
-    Serial.println("Failed to connect to Wi-Fi.");
+  while (WiFi.begin(SSID, PASS) != WL_CONNECTED) {
+    Serial.println("Attempting to connecting to WiFi...");
+    delay(1000);
   }
+  Serial.println("Connected!");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
+  wifiConnected = true;
 }
 
 void initCount() {
@@ -187,6 +198,11 @@ void initPct() {
 
 void initArm() {
   armVertical = 0;
+  ArduinoCloud.update();
+}
+
+void initGreen() {
+  isGreen = false;
   ArduinoCloud.update();
 }
 
