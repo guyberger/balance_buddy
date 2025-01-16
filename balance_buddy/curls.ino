@@ -1,8 +1,8 @@
 #include "curls.h"
 
 // IMU states
-const float greenThreshold = 0.05;
-const float yellowThreshold = 0.1;
+const float greenThreshold = 0.1;
+const float yellowThreshold = 0.15;
 float greenCtr = 0, yellowCtr = 0, redCtr = 0;
 const float curlStartThresh = 0.15;
 
@@ -42,14 +42,14 @@ bool detectReps(float deltaY) {
         // Serial.print(", prevY: ");
         //     Serial.println(previousDeltaY);
 
-    if (deltaY > previousDeltaY + 0.01) { // Threshold for upward motion
+    if (deltaY > previousDeltaY + 0.02) { // Threshold for upward motion
         goingUp = true;
         goingDown = false;  // Reset downward flag
         Serial.println("Detected upward motion.");
     }
 
     // Check for downward motion (decreasing pitch)
-    if (goingUp && deltaY < previousDeltaY - 0.01) { // Threshold for downward motion
+    if (goingUp && deltaY < previousDeltaY - 0.02) { // Threshold for downward motion
         goingDown = true;
         goingUp = false;  // Reset upward flag
         Serial.println("Detected downward motion. Rep completed!");
