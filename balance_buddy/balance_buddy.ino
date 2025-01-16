@@ -23,6 +23,7 @@
 #define YELLOW 255, 255, 0
 #define GREEN 0, 255, 0
 #define NO_COLOR 0, 0, 0
+#define READY 125, 125, 125
 
 // Leds
 Adafruit_NeoPixel pixels(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
@@ -34,16 +35,20 @@ sh2_SensorValue_t sensorValue;
 // Ground zero variables
 float groundZeroX = 0.0, groundZeroY = 0.0, groundZeroZ = 0.0;
 bool groundZeroSet = false;
+bool startExercise = false;
 
 void initProperties () {
   ArduinoCloud.setThingId(THING_ID);
   ArduinoCloud.addProperty(reps, READWRITE, ON_CHANGE, initCount);
   ArduinoCloud.addProperty(lightMode, READWRITE, ON_CHANGE, initState);
+  ArduinoCloud.addProperty(pctGreen, READWRITE, ON_CHANGE, initPct);
+  ArduinoCloud.addProperty(armVertical, READWRITE, ON_CHANGE, initArm);
 }
 
 // IMU setup function
 void imuSetup() {
   Serial.begin(115200);
+  startExercise = false;
 
 if (!bno.begin_I2C()) {
   Serial.println("Failed to find BNO085 chip. Check wiring!");
@@ -76,7 +81,7 @@ void setup() {
   connectToWifi();
 
   pixels.begin();
-  pixels.show(); // Initialize all pixels to 'off'
+  setColor(READY);
 }
 
 void loop() {
@@ -88,6 +93,16 @@ void loop() {
            float deltaX = abs(sensorValue.un.gameRotationVector.i - groundZeroX);
           float deltaY = abs(sensorValue.un.gameRotationVector.j - groundZeroY);
           float deltaZ = abs(sensorValue.un.gameRotationVector.k - groundZeroZ);
+  
+        if (!startExercise) {
+          if (!isCurlStarted(deltaY)) {
+            delay(20);
+            return;
+          } else {
+            startExercise = true;
+            Serial.println("Started the exercise!");
+          }
+        }
         int deviationMode = evaluateDeviation(deltaX);
         float maxDeviation = max(deltaX, max(deltaY, deltaZ));
         // Serial.print("dx: ");
@@ -101,12 +116,6 @@ void loop() {
 
         // Update light mode and provide feedback based on deviation mode
         SetMode(deviationMode);
-        if (deviationMode == GREEN_MODE) {
-        } else if (deviationMode == YELLOW_MODE) {
-            SetMode(YELLOW_MODE);
-        } else if (deviationMode == RED_MODE) {
-            SetMode(RED_MODE);
-        }
 
         // Detect reps
         if (detectReps(deltaY)) {
@@ -114,7 +123,7 @@ void loop() {
             Serial.print("Curls completed: ");
             Serial.println(reps);
         }
-
+        armVertical = deltaY;
     } else {
         Serial.println("Failed to retrieve sensor data.");
     }
@@ -168,6 +177,16 @@ void connectToWifi() {
 
 void initCount() {
   reps = 0;
+  ArduinoCloud.update();
+}
+
+void initPct() {
+  pctGreen = 0;
+  ArduinoCloud.update();
+}
+
+void initArm() {
+  armVertical = 0;
   ArduinoCloud.update();
 }
 

@@ -11,6 +11,8 @@ void onRepsChange();
 
 int reps;
 int lightMode;
+float pctGreen;
+float armVertical;
 
 void initProperties();
 
