@@ -1,5 +1,5 @@
 #include "thingProperties.h"
-#include "squats.h"
+#include "curls.h"
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_BNO08x.h>
 
@@ -40,6 +40,9 @@ float groundZeroX = 0.0, groundZeroY = 0.0, groundZeroZ = 0.0;
 bool groundZeroSet = false;
 bool startExercise = false;
 
+// Timing
+unsigned long lastUpdateTime = 0; // Tracks the last update time
+
 void initProperties () {
   ArduinoCloud.setThingId(THING_ID);
   ArduinoCloud.addProperty(reps, READWRITE, ON_CHANGE, initCount);
@@ -47,6 +50,7 @@ void initProperties () {
   ArduinoCloud.addProperty(pctGreen, READWRITE, ON_CHANGE, initPct);
   ArduinoCloud.addProperty(armVertical, READWRITE, ON_CHANGE, initArm);
   ArduinoCloud.addProperty(isGreen, READWRITE, ON_CHANGE, initGreen);
+  ArduinoCloud.addProperty(timeSeconds, READWRITE, ON_CHANGE, initTime);
 }
 
 // IMU setup function
@@ -89,6 +93,7 @@ void setup() {
 }
 
 void loop() {
+    unsigned long currentTime = millis();
     if (!wifiConnected) {
         Serial.println("Waiting for Wi-Fi...");
         delay(500); // Avoid busy looping
@@ -111,6 +116,11 @@ void loop() {
             startExercise = true;
             Serial.println("Started the exercise!");
           }
+        }
+                // Check if 1 second (1000 ms) has passed
+        if (currentTime - lastUpdateTime >= 1000) {
+          lastUpdateTime = currentTime; // Reset timer
+          timeSeconds++; // Call the callback function
         }
         int deviationMode = evaluateDeviation(deltaX);
         float maxDeviation = max(deltaX, max(deltaY, deltaZ));
@@ -138,7 +148,6 @@ void loop() {
     }
     delay(20);
 }
-
 
 void SetMode(int mode) {
   if (lightMode != mode) {
@@ -203,6 +212,12 @@ void initArm() {
 
 void initGreen() {
   isGreen = false;
+  ArduinoCloud.update();
+}
+
+void initTime() {
+  timeSeconds = 0;
+  lastUpdateTime = 0;
   ArduinoCloud.update();
 }
 

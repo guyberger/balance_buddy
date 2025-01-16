@@ -14,6 +14,7 @@ int lightMode;
 float pctGreen;
 float armVertical;
 bool isGreen;
+int timeSeconds;
 
 void initProperties();
 

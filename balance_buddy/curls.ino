@@ -53,7 +53,6 @@ bool detectReps(float deltaY) {
         goingDown = true;
         goingUp = false;  // Reset upward flag
         Serial.println("Detected downward motion. Rep completed!");
-
         previousDeltaY = deltaY;  // Update the previous pitch value
         return true;  // Rep completed
     }
