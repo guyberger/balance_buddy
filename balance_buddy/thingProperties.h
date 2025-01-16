@@ -10,7 +10,7 @@ const char PASS[]     = SECRET_PASS;    // Network password (use for WPA, or use
 void onRepsChange();
 
 int reps;
-String state;
+int lightMode;
 
 void initProperties();
 
